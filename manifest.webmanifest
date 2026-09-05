@@ -1,0 +1,14 @@
+{
+  "name": "KidPad 兒童學習練習台",
+  "short_name": "KidPad",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#fff9f0",
+  "theme_color": "#ffb703",
+  "lang": "zh-Hant",
+  "icons": [
+    { "src": "assets/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

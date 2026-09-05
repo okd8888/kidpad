@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>KidPad 兒童學習練習台</title>
+<meta name="theme-color" content="#ffb703">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="app">
+
+  <!-- 左側主功能區 -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-head">
+      <div class="brand">
+        <span class="brand-icon">✏️</span>
+        <span class="brand-text">KidPad</span>
+      </div>
+      <button class="collapse-btn" id="collapseBtn" type="button"
+              aria-label="收合功能選單" title="收合功能選單">◀</button>
+    </div>
+
+    <!-- 模組按鈕由 app.js 依註冊表產生 -->
+    <nav class="module-nav" id="moduleNav" aria-label="練習項目"></nav>
+
+    <div class="sidebar-foot">
+      <span class="foot-text">一起來練習吧！</span>
+    </div>
+  </aside>
+
+  <!-- 右側 MDI 內容區 -->
+  <main class="workspace">
+    <header class="workspace-head">
+      <!-- 頁籤列：已開啟過的模組 -->
+      <div class="tabbar" id="tabbar" role="tablist" aria-label="已開啟的練習"></div>
+    </header>
+
+    <!-- 每個模組一個 panel，切走時隱藏但保留，狀態不會遺失 -->
+    <div class="panels" id="panels"></div>
+  </main>
+
+</div>
+
+<script src="vendor/hanzi-writer.min.js"></script>
+<script type="module" src="app.js"></script>
+</body>
+</html>
