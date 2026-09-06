@@ -221,30 +221,43 @@ function renderHead() {
   `;
   el.head.querySelector('#btnMode').addEventListener('click', () => {
     randomMode = !randomMode;
-    renderHead();
-    quiz.start();
+    quiz?.pause();
+    startRound();          // 兩種模式的題目畫面不一樣，要重建
   });
 }
 
 function startRound() {
   renderHead();
-  quiz = createQuizView(el.quiz, {
-    roundSize: ROUND,
+
+  const common = {
     makeQuestion,
     buddy: '🐧',
     onSpeak: t => speech.say(t, 'en'),
-    onDone: () => { renderHead(); quiz.start(); },
-    onFinish({ correct, total }) {
-      if (!randomMode && state.level === 1) {
-        state.streak = correct === total ? state.streak + 1 : 0;
-        if (state.streak >= 2) { state.level = 2; state.streak = 0; }
-        saveState();
-      }
-      const gained = correct === total ? 2 : 1;
-      stars.add('english', gained);
-      return gained;
-    },
-  });
+  };
+
+  quiz = randomMode
+    // 隨機模式：一直出題不結算，想停再按「結束」
+    ? createQuizView(el.quiz, {
+        ...common,
+        endless: true,
+        onQuit: () => { randomMode = false; quiz?.pause(); startRound(); },
+        onMilestone: () => stars.add('english', 1),   // 每答對 5 題一顆星
+      })
+    : createQuizView(el.quiz, {
+        ...common,
+        roundSize: ROUND,
+        onDone: () => { renderHead(); quiz.start(); },
+        onFinish({ correct, total }) {
+          if (state.level === 1) {
+            state.streak = correct === total ? state.streak + 1 : 0;
+            if (state.streak >= 2) { state.level = 2; state.streak = 0; }
+            saveState();
+          }
+          const gained = correct === total ? 2 : 1;
+          stars.add('english', gained);
+          return gained;
+        },
+      });
   quiz.start();
 }
 

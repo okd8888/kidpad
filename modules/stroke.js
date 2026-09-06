@@ -508,9 +508,17 @@ function goNext() {
     itemIndex++;
     renderItemList();
     mountWriter();
-  } else {
-    renderMenu();
+    return;
   }
+  // 隨機練習寫完一批就再抽一批，想停再按「← 關卡」
+  if (lesson.type === 'random') {
+    lesson.items = randomItems();
+    itemIndex = 0;
+    renderItemList();
+    mountWriter();
+    return;
+  }
+  renderMenu();
 }
 
 function showReward(item) {
@@ -522,7 +530,8 @@ function showReward(item) {
   el.practice.querySelector('#rewardText').textContent = last && done === total
     ? `太棒了！「${lesson.title}」全部寫完了！`
     : `好棒！「${item.label}」寫完 ${n} 次了！`;
-  el.practice.querySelector('#rewardNext').textContent = last ? '回關卡 →' : '下一個 →';
+  el.practice.querySelector('#rewardNext').textContent =
+    last ? (lesson.type === 'random' ? '再抽一批 →' : '回關卡 →') : '下一個 →';
   el.practice.querySelector('#reward').hidden = false;
   speech.zh(el.practice.querySelector('#rewardText').textContent);
 }

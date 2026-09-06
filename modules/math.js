@@ -3,6 +3,7 @@
    S2：關卡地圖、Level 3（個位數進位加法，十格框）、升降級、Level 1 後備題庫
    Level 2 以上一律純算式：圖案直接畫出答案的話，小朋友會用數的而不是用算的，
    所以圖案改成「同一題連錯兩次」才出現的提示。
+   題目以單純的「個位數 ＋/－ 個位數」為主，減法一定是前面大於後面。
    運算元一律是個位數（1–9）；因此不出「13 － 5」這種需要兩位數被減數的退位減法
    內容設計見 docs/CONTENT-PLAN.md */
 
@@ -110,7 +111,7 @@ function l2Add() {
 
 function l2Sub() {
   const a = 3 + rnd(7);          // 3..9
-  const b = 1 + rnd(a - 1);
+  const b = 1 + rnd(a - 1);      // 1..a-1，前面一定大於後面
   const pic = pick(PICS);
   return {
     answer: a - b,
@@ -147,7 +148,7 @@ function l2MissingAdd() {
 /** 缺減數：8 － ? ＝ 3 */
 function l2MissingSub() {
   const a = 4 + rnd(6);               // 4..9
-  const left = 1 + rnd(a - 1);
+  const left = 1 + rnd(a - 1);        // 結果一定小於被減數
   return {
     answer: a - left,
     promptHtml: `<div class="q-expr big">${a} － ? ＝ ${left}</div>`,
@@ -167,16 +168,6 @@ function tenFrame(filled, tone, crossed = 0) {
     cells += `<span class="${cls}"></span>`;
   }
   return `<div class="tf">${cells}</div>`;
-}
-
-function l3Split() {
-  const total = 6 + rnd(4);           // 6..9
-  const a = 1 + rnd(total - 1);
-  return {
-    answer: total - a,
-    promptHtml: `<div class="q-expr big">把 ${total} 拆成 ${a} 和 ?</div>`,
-    sayZh: `把 ${total} 拆成 ${a} 和多少`,
-  };
 }
 
 function l3CarryAdd() {
@@ -204,12 +195,12 @@ function l3CarryPlain() {
 
 const POOL = {
   1: [l1Count, l1Count, l1Compare, l1Sequence],
-  2: [l2Add, l2Add, l2Sub, l2Sub, l2MakeTen, l2MissingAdd, l2MissingSub],
-  3: [l3CarryAdd, l3CarryAdd, l3CarryPlain, l3Split],
+  2: [l2Add, l2Add, l2Add, l2Sub, l2Sub, l2Sub, l2MakeTen, l2MissingAdd, l2MissingSub],
+  3: [l3CarryAdd, l3CarryAdd, l3CarryPlain],
 };
 
-/** 隨機模式：三級的題目全部混在一起 */
-const ALL_TYPES = [...POOL[1], ...POOL[2], ...POOL[2], ...POOL[3]];
+/** 隨機模式：以個位數加減為主，混一點進位加法；數數題留給降級用，不放進來 */
+const ALL_TYPES = [...POOL[2], ...POOL[2], ...POOL[3]];
 
 /* ================= 出題 ================= */
 
@@ -347,7 +338,7 @@ function dropStars() {
 
 /* ================= 關卡 ================= */
 
-/** 隨機挑戰：不算關卡進度，純粹想玩就玩，答對一樣有星星 */
+/** 隨機挑戰：一直出題不結算，想停再按「結束」；不算關卡進度，答對一樣有星星 */
 function startRandom() {
   randomMode = true;
   stage = -1;
@@ -355,16 +346,11 @@ function startRandom() {
   el.quiz.hidden = false;
 
   quiz = createQuizView(el.quiz, {
-    roundSize: ROUND,
     makeQuestion,
     buddy: '🦊',
-    doneLabel: '回到地圖',
-    onDone: backToMap,
-    onFinish({ correct, total }) {
-      const gained = correct === total ? 2 : 1;
-      stars.add('math', gained);
-      return gained;
-    },
+    endless: true,
+    onQuit: backToMap,
+    onMilestone: () => stars.add('math', 1),   // 每答對 5 題一顆星
   });
   quiz.start();
 }

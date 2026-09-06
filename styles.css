@@ -942,3 +942,6 @@ button {
   animation: tipPop .35s ease;
 }
 .quiz-hint[hidden] { display: none; }
+
+/* 隨機模式的「結束」按鈕 */
+.quit-btn { min-height: 44px; padding: 4px 18px; font-size: 16px; margin-left: auto; }
