@@ -261,6 +261,7 @@ export default {
     speech.prepare().then(ok => {
       hasVoice = ok.en;
       startRound();
+      speech.zh('這裡是英文練習，看圖片選出開頭的字母');
     });
   },
 

@@ -74,6 +74,9 @@ let childName = '';
 
 let lesson = null;   // { type, key, title, items:[] }
 let itemIndex = 0;
+let idleTimer = null;
+
+const IDLE_MS = 15000;   // 發呆這麼久就出聲提醒
 
 /* ================= 資料 ================= */
 
@@ -215,6 +218,9 @@ function renderMenu() {
 
   el.menu.querySelectorAll('.lesson-card').forEach(btn => {
     btn.addEventListener('click', () => {
+      const name = btn.querySelector('.lc-title')?.textContent
+                || btn.querySelector('.lc-big')?.textContent || '';
+      if (name) speech.zh(name);      // 點到什麼就唸什麼
       const { type, key, index } = btn.dataset;
       if (type === 'random') {
         openLesson({ type, key: 'random', title: '隨機練習', items: randomItems() }, 0);
@@ -463,10 +469,28 @@ function mountWriter() {
   speech.prepare().then(() => {
     speech.zh(item.hint ? `${item.label}，${item.hint}` : `寫寫看，${item.label}`);
   });
+  armIdle();
+}
+
+/* ---------- 發呆太久就提醒他下一步要按哪裡 ---------- */
+function armIdle() {
+  stopIdle();
+  idleTimer = setTimeout(() => {
+    const btn = el.practice.querySelector('#btnQuiz');
+    if (!btn) return;
+    btn.classList.add('pulse');
+    buddySay('按綠色的按鈕開始寫');
+  }, IDLE_MS);
+}
+
+function stopIdle() {
+  clearTimeout(idleTimer);
+  el?.practice?.querySelector('.pulse')?.classList.remove('pulse');
 }
 
 function playDemo() {
   if (!writer) return;
+  stopIdle();
   cancelQuiz();
   setTip('看清楚每一筆的順序～');
   writer.animateCharacter({ onComplete: () => setTip('換你了！按「我來寫」。') });
@@ -475,6 +499,7 @@ function playDemo() {
 function startQuiz() {
   const item = currentItem();
   if (!writer || !item) return;
+  stopIdle();
   hideReward();
   setTip(item.start ? '從亮起來的那一筆開始描！' : '用手指或滑鼠描描看！');
 
@@ -561,10 +586,14 @@ export default {
     };
     renderMenu();
     built = true;
+
+    speech.prepare().then(() =>
+      speech.zh('這裡是寫字練習，選一個想寫的來練習吧'));
   },
 
   unmount() {
     cancelQuiz();
+    stopIdle();
     speech.stop();
   },
 };

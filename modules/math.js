@@ -10,6 +10,7 @@
 import { createQuizView } from '../lib/quiz-ui.js';
 import { stars } from '../lib/stars.js';
 import { store } from '../lib/storage.js';
+import { speech } from '../lib/speech.js';
 
 const ROUND       = 6;   // 一關幾題
 const STAGES      = 5;   // 一張地圖幾關
@@ -268,7 +269,10 @@ function renderMap() {
   `;
 
   el.map.querySelectorAll('.node[data-stage]').forEach(btn => {
-    btn.addEventListener('click', () => startStage(+btn.dataset.stage));
+    btn.addEventListener('click', () => {
+      speech.zh(`第 ${+btn.dataset.stage + 1} 關`);
+      startStage(+btn.dataset.stage);
+    });
   });
   el.map.querySelector('#btnRandom').addEventListener('click', startRandom);
   el.map.querySelector('#btnNextMap')?.addEventListener('click', () => {
@@ -382,9 +386,13 @@ export default {
     };
     renderMap();
     built = true;
+
+    speech.prepare().then(() =>
+      speech.zh('這裡是算術練習，選一關開始'));
   },
 
   unmount() {
     quiz?.pause();
+    speech.stop();
   },
 };

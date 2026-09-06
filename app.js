@@ -5,6 +5,7 @@
 import { registry } from './modules/index.js';
 import { store } from './lib/storage.js';
 import { stars } from './lib/stars.js';
+import { speech } from './lib/speech.js';
 
 const navEl    = document.getElementById('moduleNav');
 const tabbarEl = document.getElementById('tabbar');
@@ -29,7 +30,10 @@ function buildNav() {
       (entry.soon ? '<span class="soon">準備中</span>' : '') +
       `</span>` +
       `<span class="star-badge" hidden></span>`;
-    btn.addEventListener('click', () => activate(entry.id));
+    btn.addEventListener('click', () => {
+      speech.zh(entry.title);        // 還不太會讀字，點到什麼就唸什麼
+      activate(entry.id);
+    });
     navEl.appendChild(btn);
   });
 
@@ -110,6 +114,7 @@ document.getElementById('collapseBtn').addEventListener('click', () => {
 if (store.get('kidpad.collapsed', false)) appEl.classList.add('collapsed');
 
 /* ---------- 啟動 ---------- */
+speech.prepare();
 buildNav();
 
 const last = store.get('kidpad.lastModule', null);
