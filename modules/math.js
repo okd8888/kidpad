@@ -316,6 +316,7 @@ function startStage(i) {
   quiz = createQuizView(el.quiz, {
     roundSize: ROUND,
     makeQuestion,
+    buddy: '🦊',
     doneLabel: '回到地圖',
     onDone: backToMap,
     onFinish({ correct, total }) {

@@ -48,6 +48,7 @@ function buildDom() {
         <div class="writer-box" id="writerBox">
           <div class="writer-placeholder" id="writerHint">先在右邊選一個字吧！</div>
         </div>
+        <div class="buddy" id="strokeBuddy">🐼</div>
         <div class="stroke-tip" id="strokeTip"></div>
         <div class="stroke-actions">
           <button class="kid-btn sky"  id="btnDemo"  type="button">👀 看一次</button>
@@ -125,6 +126,15 @@ function renderList() {
   if (!chars.length) {
     list.innerHTML = '<p class="side-note">清單是空的，在上面輸入想練的字。</p>';
   }
+}
+
+/** 讓熊貓有反應：cheer 跳一下、tilt 歪頭 */
+function react(kind) {
+  const b = el.querySelector('#strokeBuddy');
+  if (!b) return;
+  b.classList.remove('cheer', 'tilt');
+  void b.offsetWidth;
+  b.classList.add(kind);
 }
 
 function setTip(text, kind = 'good') {
@@ -265,11 +275,13 @@ function startQuiz() {
   writer.quiz({
     onCorrectStroke: info => {
       sound.good();
+      react('cheer');
       const left = info.strokesRemaining;
       setTip(left > 0 ? `很好！還剩 ${left} 筆` : '最後一筆完成！');
     },
     onMistake: () => {
       sound.hint();
+      react('tilt');
       setTip('這一筆再試一次，慢慢來～', 'hint');
     },
     onComplete: () => {
