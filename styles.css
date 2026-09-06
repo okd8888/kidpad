@@ -932,3 +932,13 @@ button {
 
 /* 練習畫面裡的字卡是按鈕，去掉預設外觀 */
 .char-card { font-family: inherit; }
+
+/* 卡住兩次才出現的鷹架（可以數的圖案），平常不顯示免得直接數出答案 */
+.quiz-hint {
+  padding: 10px 16px;
+  border: 3px dashed var(--line);
+  border-radius: 16px;
+  background: #fffdf8;
+  animation: tipPop .35s ease;
+}
+.quiz-hint[hidden] { display: none; }

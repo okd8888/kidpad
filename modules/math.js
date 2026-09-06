@@ -1,6 +1,8 @@
 /* 算術練習
    S1：Level 2（10 以內加減）
    S2：關卡地圖、Level 3（個位數進位加法，十格框）、升降級、Level 1 後備題庫
+   Level 2 以上一律純算式：圖案直接畫出答案的話，小朋友會用數的而不是用算的，
+   所以圖案改成「同一題連錯兩次」才出現的提示。
    運算元一律是個位數（1–9）；因此不出「13 － 5」這種需要兩位數被減數的退位減法
    內容設計見 docs/CONTENT-PLAN.md */
 
@@ -88,53 +90,36 @@ function l1Sequence() {
 }
 
 /* --- Level 2：10 以內加減 --- */
-function l2AddPic() {
-  const a = 1 + rnd(5);
-  const b = 1 + rnd(Math.min(5, 10 - a));
+function l2Add() {
+  const a = 1 + rnd(9);
+  const b = 1 + rnd(10 - a);
   const pic = pick(PICS);
   return {
     answer: a + b,
-    promptHtml: `
+    promptHtml: `<div class="q-expr big">${a} ＋ ${b} ＝ ?</div>`,
+    // 卡住的時候才把圖案拿出來當鷹架，平常不顯示，免得直接數就有答案
+    hintHtml: `
       <div class="q-row">
         <span class="q-pic">${repeat(pic, a)}</span>
         <span class="q-op">＋</span>
         <span class="q-pic">${repeat(pic, b)}</span>
-      </div>
-      <div class="q-expr">${a} ＋ ${b} ＝ ?</div>`,
+      </div>`,
     sayZh: `${a} 加 ${b} 等於多少`,
   };
 }
 
-function l2SubPic() {
+function l2Sub() {
   const a = 3 + rnd(7);          // 3..9
   const b = 1 + rnd(a - 1);
   const pic = pick(PICS);
   return {
     answer: a - b,
-    promptHtml: `
+    promptHtml: `<div class="q-expr big">${a} － ${b} ＝ ?</div>`,
+    // 原本有幾個、要拿走哪幾個都畫出來，但這是提示，不是題目
+    hintHtml: `
       <div class="q-row">
         <span class="q-pic">${repeat(pic, a - b)}<span class="eaten">${repeat(pic, b)}</span></span>
-      </div>
-      <div class="q-expr">${a} － ${b} ＝ ?</div>`,
-    sayZh: `${a} 減 ${b} 等於多少`,
-  };
-}
-
-function l2Plain() {
-  if (rnd(2)) {
-    const a = 1 + rnd(9);
-    const b = 1 + rnd(10 - a);
-    return {
-      answer: a + b,
-      promptHtml: `<div class="q-expr big">${a} ＋ ${b} ＝ ?</div>`,
-      sayZh: `${a} 加 ${b} 等於多少`,
-    };
-  }
-  const a = 2 + rnd(8);          // 2..9
-  const b = 1 + rnd(a - 1);
-  return {
-    answer: a - b,
-    promptHtml: `<div class="q-expr big">${a} － ${b} ＝ ?</div>`,
+      </div>`,
     sayZh: `${a} 減 ${b} 等於多少`,
   };
 }
@@ -219,7 +204,7 @@ function l3CarryPlain() {
 
 const POOL = {
   1: [l1Count, l1Count, l1Compare, l1Sequence],
-  2: [l2AddPic, l2AddPic, l2SubPic, l2SubPic, l2Plain, l2MakeTen, l2MissingAdd, l2MissingSub],
+  2: [l2Add, l2Add, l2Sub, l2Sub, l2MakeTen, l2MissingAdd, l2MissingSub],
   3: [l3CarryAdd, l3CarryAdd, l3CarryPlain, l3Split],
 };
 
@@ -266,6 +251,7 @@ function makeQuestion(index, ctx) {
     promptHtml: q.promptHtml,
     options: optionsFor(q.answer, q.fixedOptions),
     sayZh: q.sayZh,
+    hintHtml: q.hintHtml,
   };
 }
 
