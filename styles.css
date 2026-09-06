@@ -960,15 +960,85 @@ button {
   height: auto;
 }
 
-/* ---------- 硬幣 ---------- */
-.coin-row {
+/* ---------- 認識錢幣（拖硬幣湊金額） ---------- */
+.money {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  min-height: 100%;
+}
+
+.money-goal {
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--ink);
+}
+.money-goal b {
+  font-size: 46px;
+  color: var(--brand-deep);
+}
+
+/* 放硬幣的盤子 */
+.tray {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  align-content: center;
   justify-content: center;
-  align-items: center;
+  width: min(520px, 92%);
+  min-height: 130px;
+  padding: 12px;
+  border: 5px dashed var(--line);
+  border-radius: 24px;
+  background: #fffdf8;
+  transition: background .15s ease, border-color .15s ease;
 }
-.coin { flex: 0 0 auto; }
+.tray.over { border-color: var(--brand); background: #fff2dd; }
+.tray.done { border-style: solid; border-color: var(--mint); background: #eafaf7; }
+.tray-hint { margin: auto; color: var(--ink-soft); font-size: 19px; }
+
+.tray-total { font-size: 22px; font-weight: 700; color: var(--ink-soft); }
+.tray-total b { font-size: 28px; color: var(--mint); }
+.tray-total b.over { color: var(--brand-deep); }
+
+.tray-label { margin: 4px 0 0; font-size: 17px; color: var(--ink-soft); }
+
+.coin-source {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.coin-btn {
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: grab;
+  line-height: 0;
+  touch-action: none;          /* 讓 pointer 拖曳不會變成捲動 */
+  transition: transform .1s ease;
+}
+.coin-btn.in-source:active { transform: scale(1.12); cursor: grabbing; }
+.coin-btn.in-tray { cursor: pointer; animation: coinDrop .25s ease; }
+
+.coin-btn.ghost {
+  position: fixed;
+  transform: translate(-50%, -50%) scale(1.15);
+  pointer-events: none;
+  z-index: 50;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, .25));
+}
+
+@keyframes coinDrop {
+  0%   { transform: translateY(-14px) scale(.8); opacity: .5; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.money-actions { display: flex; gap: 12px; }
+.money-actions .kid-btn { min-height: 46px; padding: 6px 18px; font-size: 17px; }
 
 /* ---------- 注音符號 ---------- */
 .bopomo-big {
