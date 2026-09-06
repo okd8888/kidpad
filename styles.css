@@ -969,3 +969,23 @@ button {
   align-items: center;
 }
 .coin { flex: 0 0 auto; }
+
+/* ---------- 注音符號 ---------- */
+.bopomo-big {
+  font-size: 120px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--grape);
+}
+
+.bopomo-row {
+  font-size: 52px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  color: var(--ink);
+}
+.bopomo-row .blank { color: var(--brand-deep); }
+.bopomo-row.small { font-size: 34px; }
+
+/* 注音選項按鈕的字要大一點才看得清楚筆畫 */
+.quiz-options .opt-btn { line-height: 1.1; }

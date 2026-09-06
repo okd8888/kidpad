@@ -1,75 +1,93 @@
 /* 注音符號
-   小一上就要學，先從「認得符號」開始。
-   注音符號在筆順資料庫裡查不到（全部 404），所以不做描寫，只做認讀。
-   題目一律看得懂就答得出來，不需要用聽的。 */
+   小一上才會正式學，所以題目要從「完全沒學過」開始：
+     Level 1 找一樣的  —— 純看形狀，不需要任何注音知識
+     Level 2 接下去    —— 只考 ㄅㄆㄇㄈ 開頭這幾個，會唱就答得出來
+     Level 3 看圖選注音 —— 才開始需要聽出開頭的音，答錯兩次會把整個字的注音給他看
+   注音符號在筆順資料庫裡查不到（全部 404），所以不做描寫，只做認讀。 */
 
 import { createLeveledModule } from '../lib/level-module.js';
 
 /** 37 個注音符號，順序就是課本的順序 */
 const ALL = 'ㄅㄆㄇㄈㄉㄊㄋㄌㄍㄎㄏㄐㄑㄒㄓㄔㄕㄖㄗㄘㄙㄧㄨㄩㄚㄛㄜㄝㄞㄟㄠㄡㄢㄣㄤㄥㄦ'.split('');
 
-/** 21 個聲母 → 代表詞與圖，全部都是那個聲母開頭 */
-const INITIALS = [
-  ['ㄅ', '包子', '🥟'], ['ㄆ', '葡萄', '🍇'], ['ㄇ', '貓咪', '🐱'], ['ㄈ', '飛機', '✈️'],
-  ['ㄉ', '雞蛋', '🥚'], ['ㄊ', '兔子', '🐰'], ['ㄋ', '牛', '🐮'],   ['ㄌ', '老虎', '🐯'],
-  ['ㄍ', '狗', '🐶'],   ['ㄎ', '咖啡', '☕'], ['ㄏ', '花', '🌸'],   ['ㄐ', '雞', '🐔'],
-  ['ㄑ', '汽車', '🚗'], ['ㄒ', '西瓜', '🍉'], ['ㄓ', '豬', '🐷'],   ['ㄔ', '蟲', '🐛'],
-  ['ㄕ', '樹', '🌳'],   ['ㄖ', '太陽', '☀️'], ['ㄗ', '足球', '⚽'], ['ㄘ', '草莓', '🍓'],
-  ['ㄙ', '雨傘', '☂️'],
+/** 長得像的符號，Level 1 拿來當干擾選項 */
+const LOOK_ALIKE = [
+  ['ㄅ', 'ㄆ'], ['ㄋ', 'ㄇ', 'ㄊ'], ['ㄈ', 'ㄏ'], ['ㄗ', 'ㄘ'], ['ㄓ', 'ㄔ'],
+  ['ㄛ', 'ㄜ'], ['ㄝ', 'ㄟ'], ['ㄨ', 'ㄩ'], ['ㄣ', 'ㄥ'], ['ㄞ', 'ㄠ'],
+];
+
+/** Level 2 只考開頭這 8 個，就是大家會唱的那一段 */
+const FIRST_EIGHT = ALL.slice(0, 8);      // ㄅㄆㄇㄈㄉㄊㄋㄌ
+
+/** Level 3 只用最好認的 10 個聲母，每個都配一張圖和完整注音 */
+const EASY = [
+  ['ㄅ', '包子', '🥟', 'ㄅㄠ˙ㄗ'],
+  ['ㄆ', '葡萄', '🍇', 'ㄆㄨˊㄊㄠˊ'],
+  ['ㄇ', '貓咪', '🐱', 'ㄇㄠㄇㄧ'],
+  ['ㄈ', '飛機', '✈️', 'ㄈㄟㄐㄧ'],
+  ['ㄉ', '大象', '🐘', 'ㄉㄚˋㄒㄧㄤˋ'],
+  ['ㄊ', '兔子', '🐰', 'ㄊㄨˋ˙ㄗ'],
+  ['ㄋ', '牛奶', '🥛', 'ㄋㄧㄡˊㄋㄞˇ'],
+  ['ㄌ', '老虎', '🐯', 'ㄌㄠˇㄏㄨˇ'],
+  ['ㄍ', '狗狗', '🐶', 'ㄍㄡˇㄍㄡˇ'],
+  ['ㄎ', '咖啡', '☕', 'ㄎㄚㄈㄟ'],
 ];
 
 const rnd = n => Math.floor(Math.random() * n);
 const pick = arr => arr[rnd(arr.length)];
 
-function optionsOf(answer) {
+function options(answer, pool) {
   const set = new Set([answer]);
-  while (set.size < 3) set.add(pick(ALL));
+  while (set.size < 3) set.add(pick(pool));
   return [...set]
     .sort(() => Math.random() - 0.5)
     .map(v => ({ text: v, correct: v === answer }));
 }
 
-/** 符號順序：ㄅ ㄆ □ ㄈ */
-function qOrder() {
-  const i = rnd(ALL.length - 3);
-  const seq = ALL.slice(i, i + 4);
-  const miss = 1 + rnd(2);
-  const answer = seq[miss];
-  const shown = seq.map((c, k) => (k === miss ? '□' : c)).join('　');
+/** Level 1：找出一模一樣的那個（只看形狀，不用會唸） */
+function qMatch() {
+  const group = pick(LOOK_ALIKE);
+  const answer = pick(group);
+  const set = new Set([answer, ...group.filter(c => c !== answer)]);
+  while (set.size < 3) set.add(pick(ALL));
+
   return {
     promptHtml: `
-      <div class="letter-row">${shown}</div>
-      <div class="q-expr">中間少了哪一個？</div>`,
-    options: optionsOf(answer),
-    sayZh: '中間少了哪一個',
+      <div class="bopomo-big">${answer}</div>
+      <div class="q-expr">找出一樣的那一個</div>`,
+    options: [...set].slice(0, 3)
+      .sort(() => Math.random() - 0.5)
+      .map(v => ({ text: v, correct: v === answer })),
+    sayZh: '找出一樣的那一個',
   };
 }
 
-/** 看圖選聲母：🐱 貓咪 → ㄇ */
+/** Level 2：ㄅ ㄆ □ —— 從頭開始，只考前 8 個 */
+function qNext() {
+  const miss = 2 + rnd(FIRST_EIGHT.length - 2);      // 至少從第 3 個開始問
+  const shown = FIRST_EIGHT.slice(0, miss).join('　');
+  const answer = FIRST_EIGHT[miss];
+  return {
+    promptHtml: `
+      <div class="bopomo-row">${shown}　<span class="blank">□</span></div>
+      <div class="q-expr">接下來是哪一個？</div>`,
+    options: options(answer, FIRST_EIGHT),
+    sayZh: '接下來是哪一個',
+  };
+}
+
+/** Level 3：看圖選開頭的注音，答錯兩次會把整個詞的注音給他看 */
 function qInitial() {
-  const [sym, word, emoji] = pick(INITIALS);
+  const [sym, word, emoji, zhuyin] = pick(EASY);
+  const pool = EASY.map(e => e[0]);
   return {
     promptHtml: `
       <div class="pic-big">${emoji}</div>
       <div class="q-expr">「${word}」是哪個注音開頭？</div>`,
-    options: optionsOf(sym),
+    options: options(sym, pool),
     sayZh: `${word}，是哪個注音開頭`,
-  };
-}
-
-/** 反過來：給注音，選出開頭是它的那個詞 */
-function qWord() {
-  const [sym, word, emoji] = pick(INITIALS);
-  const others = INITIALS.filter(x => x[0] !== sym).sort(() => Math.random() - 0.5).slice(0, 2);
-  const opts = [[sym, word, emoji], ...others]
-    .sort(() => Math.random() - 0.5)
-    .map(([s, w, e]) => ({ text: `${e} ${w}`, correct: s === sym }));
-  return {
-    promptHtml: `
-      <div class="letter-big">${sym}</div>
-      <div class="q-expr">哪一個是這個注音開頭？</div>`,
-    options: opts,
-    sayZh: '哪一個是這個注音開頭',
+    hintHtml: `<div class="bopomo-row small">${word}　${zhuyin}</div>`,
+    hintTip: '看看這個字怎麼拼',
   };
 }
 
@@ -79,10 +97,10 @@ export default createLeveledModule({
   icon: 'ㄅ',
   storeKey: 'kidpad.bopomo.progress',
   buddy: '🐿️',
-  intro: '這裡是注音符號，看圖片選出正確的注音',
+  intro: '這裡是注音符號，先從找出一樣的開始',
   levels: [
-    { name: 'Level 1 · 記順序', note: 'ㄅㄆㄇㄈ 排下去，少了哪一個', make: qOrder },
-    { name: 'Level 2 · 看圖選注音', note: '這個東西是哪個注音開頭', make: qInitial },
-    { name: 'Level 3 · 反過來找', note: '看注音，選出開頭是它的東西', make: () => (rnd(2) ? qWord() : qInitial()) },
+    { name: 'Level 1 · 找一樣的', note: '看形狀就好，還不用會唸', make: qMatch },
+    { name: 'Level 2 · 接下去',   note: 'ㄅㄆㄇㄈ 唱下去，接下來是哪一個', make: qNext },
+    { name: 'Level 3 · 看圖選注音', note: '聽聽看這個東西，是哪個注音開頭', make: qInitial },
   ],
 });

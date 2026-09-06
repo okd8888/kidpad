@@ -107,6 +107,7 @@ function l2Add() {
         <span class="q-pic">${repeat(pic, b)}</span>
       </div>`,
     sayZh: `${a} 加 ${b} 等於多少`,
+    hintTip: '數數看這些圖案',
   };
 }
 
@@ -214,6 +215,7 @@ function makeQuestion(index, ctx) {
     options: optionsFor(q.answer, q.fixedOptions),
     sayZh: q.sayZh,
     hintHtml: q.hintHtml,
+    hintTip: q.hintTip,
   };
 }
 
