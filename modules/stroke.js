@@ -8,6 +8,7 @@ import { store } from '../lib/storage.js';
 import { sound } from '../lib/sound.js';
 import { loadCharData } from '../lib/hanzi-data.js';
 import { stars } from '../lib/stars.js';
+import { speech } from '../lib/speech.js';
 
 const KEY_RECORDS = 'kidpad.stroke.records';   // 每個字練過幾次
 const KEY_STROKES = 'kidpad.stroke.strokes';   // 每個基本筆劃練過幾次
@@ -53,7 +54,13 @@ const SETS = [
   {
     key: 'life', title: '生活常用字', icon: '🌈',
     chars: ['目','田','白','石','立','早','花','我','你','他','好','是','有','在',
-            '來','去','多','少','生','用','出','可','文','心','耳'],
+            '來','去','多','少','生','用','出','可','文','心','耳',
+            '車','門','書','筆','紙','飯','麵','果','菜'],
+  },
+  {
+    key: 'nature', title: '動物和大自然', icon: '🐾',
+    chars: ['牛','羊','馬','魚','鳥','虫','犬','貓','兔','草','樹','林','森',
+            '雲','雨','風','雪','星','光','電'],
   },
 ];
 
@@ -130,6 +137,21 @@ function setItems(set) {
   }));
 }
 
+/** 隨機練習：所有筆劃、規則字、字表字混在一起抽 */
+function randomItems(n = 8) {
+  const pool = [
+    ...strokeItems(),
+    ...RULES.flatMap(ruleItems),
+    ...SETS.flatMap(setItems),
+  ];
+  const seen = new Set();
+  const uniq = [];
+  pool.forEach(it => {
+    if (!seen.has(it.progKey)) { seen.add(it.progKey); uniq.push(it); }
+  });
+  return uniq.sort(() => Math.random() - 0.5).slice(0, n);
+}
+
 /* ================= 關卡選單 ================= */
 
 function renderMenu() {
@@ -179,12 +201,24 @@ function renderMenu() {
       <h3 class="lv-title">Level 3 · 常用字</h3>
       <div class="card-row">${setCards}</div>
     </div>
+    <div class="lv-block">
+      <h3 class="lv-title">🎲 隨機練習</h3>
+      <div class="card-row">
+        <button class="lesson-card wide" data-type="random" type="button">
+          <span class="lc-big">🎲</span>
+          <span class="lc-title">抽 8 個來寫</span>
+          <span class="lc-prog">每次都不一樣</span>
+        </button>
+      </div>
+    </div>
   `;
 
   el.menu.querySelectorAll('.lesson-card').forEach(btn => {
     btn.addEventListener('click', () => {
       const { type, key, index } = btn.dataset;
-      if (type === 'stroke') {
+      if (type === 'random') {
+        openLesson({ type, key: 'random', title: '隨機練習', items: randomItems() }, 0);
+      } else if (type === 'stroke') {
         openLesson({ type, key: 'basic', title: '基本筆劃', items: sItems }, +index);
       } else if (type === 'rule') {
         const r = RULES.find(x => x.key === key);
@@ -225,7 +259,10 @@ function renderPractice() {
     <div class="stroke-layout">
       <div class="stroke-main">
         <div class="writer-box" id="writerBox"></div>
-        <div class="buddy" id="strokeBuddy">🐼</div>
+        <div class="buddy-wrap">
+          <div class="bubble" id="strokeBubble" hidden></div>
+          <div class="buddy" id="strokeBuddy">🐼</div>
+        </div>
         <div class="stroke-tip" id="strokeTip"></div>
         <div class="stroke-actions">
           <button class="kid-btn sky"   id="btnDemo"  type="button">👀 看一次</button>
@@ -328,6 +365,8 @@ function setTip(text, kind = 'good') {
   if (!tip) return;
   tip.textContent = text;
   tip.classList.toggle('hint', kind === 'hint');
+  tip.classList.remove('pop');
+  if (text) { void tip.offsetWidth; tip.classList.add('pop'); }
 }
 
 /** 讓熊貓有反應：cheer 跳一下、tilt 歪頭 */
@@ -337,6 +376,25 @@ function react(kind) {
   b.classList.remove('cheer', 'tilt');
   void b.offsetWidth;
   b.classList.add(kind);
+}
+
+/** 熊貓說話：泡泡 + 唸出來，給還不太會讀字的年紀 */
+function buddySay(text, kind = 'hint') {
+  const bubble = el.practice.querySelector('#strokeBubble');
+  if (bubble) {
+    bubble.textContent = text;
+    bubble.hidden = false;
+    bubble.classList.toggle('good', kind === 'good');
+    bubble.classList.remove('pop');
+    void bubble.offsetWidth;
+    bubble.classList.add('pop');
+  }
+  if (kind === 'hint') speech.zh(text);
+}
+
+function hideBubble() {
+  const b = el.practice.querySelector('#strokeBubble');
+  if (b) b.hidden = true;
 }
 
 /* ---------- 寫字區 ---------- */
@@ -401,6 +459,10 @@ function mountWriter() {
   });
 
   setTip('按「看一次」看老師怎麼寫。');
+  hideBubble();
+  speech.prepare().then(() => {
+    speech.zh(item.hint ? `${item.label}，${item.hint}` : `寫寫看，${item.label}`);
+  });
 }
 
 function playDemo() {
@@ -428,11 +490,13 @@ function startQuiz() {
       sound.hint();
       react('tilt');
       setTip('這一筆再試一次，慢慢來～', 'hint');
+      buddySay('再試一次，慢慢來');
     },
     onComplete: () => {
       bump(item);
       sound.win();
       react('cheer');
+      buddySay('寫完了，好棒！', 'good');
       renderItemList();
       showReward(item);
     },
@@ -460,6 +524,7 @@ function showReward(item) {
     : `好棒！「${item.label}」寫完 ${n} 次了！`;
   el.practice.querySelector('#rewardNext').textContent = last ? '回關卡 →' : '下一個 →';
   el.practice.querySelector('#reward').hidden = false;
+  speech.zh(el.practice.querySelector('#rewardText').textContent);
 }
 
 function hideReward() {
@@ -491,5 +556,6 @@ export default {
 
   unmount() {
     cancelQuiz();
+    speech.stop();
   },
 };

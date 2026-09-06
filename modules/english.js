@@ -21,18 +21,38 @@ const CONFUSING = [
   ['u', 'v'],
 ];
 
-/** 字母 → 代表單字與圖 */
+/** 字母 → 好幾個代表單字，題目才不會每次都一樣 */
 const WORDS = {
-  A: ['apple', '🍎'],  B: ['ball', '⚽'],   C: ['cat', '🐱'],     D: ['dog', '🐶'],
-  E: ['egg', '🥚'],    F: ['fish', '🐟'],   G: ['goat', '🐐'],    H: ['hat', '🎩'],
-  I: ['ice', '🧊'],    J: ['juice', '🧃'],  K: ['kite', '🪁'],    L: ['lion', '🦁'],
-  M: ['moon', '🌙'],   N: ['nose', '👃'],   O: ['orange', '🍊'],  P: ['pig', '🐷'],
-  Q: ['queen', '👑'],  R: ['rabbit', '🐰'], S: ['sun', '☀️'],     T: ['tiger', '🐯'],
-  U: ['umbrella', '☂️'], V: ['van', '🚐'],  W: ['water', '💧'],   X: ['box', '📦'],
-  Y: ['yoyo', '🪀'],   Z: ['zoo', '🦓'],
+  A: [['apple', '🍎'], ['ant', '🐜']],
+  B: [['ball', '⚽'], ['bear', '🐻'], ['bus', '🚌']],
+  C: [['cat', '🐱'], ['car', '🚗'], ['cake', '🍰']],
+  D: [['dog', '🐶'], ['duck', '🦆']],
+  E: [['egg', '🥚'], ['elephant', '🐘']],
+  F: [['fish', '🐟'], ['frog', '🐸'], ['flower', '🌸']],
+  G: [['goat', '🐐'], ['grapes', '🍇']],
+  H: [['hat', '🎩'], ['house', '🏠'], ['horse', '🐴']],
+  I: [['ice', '🧊'], ['ice cream', '🍦']],
+  J: [['jet', '✈️'], ['juice', '🧃']],
+  K: [['key', '🔑'], ['kite', '🪁']],
+  L: [['lion', '🦁'], ['leaf', '🍃']],
+  M: [['moon', '🌙'], ['milk', '🥛'], ['monkey', '🐵']],
+  N: [['nose', '👃'], ['nut', '🥜']],
+  O: [['orange', '🍊'], ['owl', '🦉']],
+  P: [['pig', '🐷'], ['pizza', '🍕'], ['pencil', '✏️']],
+  Q: [['queen', '👑'], ['question', '❓']],
+  R: [['rabbit', '🐰'], ['rainbow', '🌈']],
+  S: [['sun', '☀️'], ['star', '⭐'], ['snake', '🐍']],
+  T: [['tiger', '🐯'], ['tree', '🌳'], ['train', '🚆']],
+  U: [['umbrella', '☂️'], ['unicorn', '🦄']],
+  V: [['van', '🚐'], ['violin', '🎻']],
+  W: [['water', '💧'], ['watch', '⌚'], ['whale', '🐳']],
+  Y: [['yellow', '🟡'], ['yoyo', '🪀']],
+  Z: [['zebra', '🦓'], ['zoo', '🦁']],
 };
 
-const LETTERS = Object.keys(WORDS);
+/** 認讀題用得到全部 26 個字母；X 開頭的常用單字對這個年紀太難，發音題就跳過它 */
+const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+const WORD_LETTERS = Object.keys(WORDS);
 
 const LEVEL_NAME = {
   1: 'Level 1 · 認字母',
@@ -44,6 +64,7 @@ let el = null;
 let quiz = null;
 let hasVoice = false;
 let state = null;
+let randomMode = false;
 
 const rnd = n => Math.floor(Math.random() * n);
 const pick = arr => arr[rnd(arr.length)];
@@ -53,22 +74,23 @@ function loadState() {
 }
 function saveState() { store.set(KEY, state); }
 
+/** 這個字母的其中一個代表單字 */
+function wordOf(letter) { return pick(WORDS[letter]); }
+
 /* ================= 題庫 ================= */
 
 /** 從易混淆組挑一個字母，並用同組的當干擾選項 */
 function confusingPair() {
   const group = pick(CONFUSING);
   const answer = pick(group);
-  const others = group.filter(c => c !== answer);
-  return { answer, others };
+  return { answer, others: group.filter(c => c !== answer) };
 }
 
 function optionsOf(answer, others = []) {
   const set = new Set([answer, ...others]);
   while (set.size < 3) {
     const c = pick(LETTERS);
-    const v = answer === answer.toLowerCase() ? c.toLowerCase() : c;
-    set.add(v);
+    set.add(answer === answer.toLowerCase() ? c.toLowerCase() : c);
   }
   return [...set]
     .slice(0, 3)
@@ -76,7 +98,7 @@ function optionsOf(answer, others = []) {
     .map(v => ({ text: v, correct: v === answer }));
 }
 
-/* --- Level 1 --- */
+/* --- Level 1：認字母 --- */
 
 /** 大小寫配對：看大寫選小寫 */
 function q1Case(useConfusing) {
@@ -84,14 +106,13 @@ function q1Case(useConfusing) {
     ? confusingPair()
     : { answer: pick(LETTERS).toLowerCase(), others: [] };
 
-  const lower = answer.toLowerCase();
-  const upper = answer.toUpperCase();
   return {
     promptHtml: `
-      <div class="letter-big">${upper}</div>
+      <div class="letter-big">${answer.toUpperCase()}</div>
       <div class="q-expr">哪一個是它的小寫？</div>`,
-    options: optionsOf(lower, others.map(o => o.toLowerCase())),
-    say: hasVoice ? upper : null,
+    options: optionsOf(answer.toLowerCase(), others.map(o => o.toLowerCase())),
+    say: hasVoice ? answer.toUpperCase() : null,
+    sayZh: '哪一個是它的小寫',
   };
 }
 
@@ -122,18 +143,23 @@ function q1Sequence() {
       <div class="letter-row">${shown}</div>
       <div class="q-expr">中間少了哪一個？</div>`,
     options: optionsOf(answer, [seq[miss === 1 ? 2 : 1]]),
+    sayZh: '中間少了哪一個',
   };
 }
 
-/* --- Level 2 --- */
+/* --- Level 2：聽發音 --- */
 
-/** 聽單字選開頭字母（唸整個單字，不唸音素） */
+/** 聽單字選開頭字母（唸整個單字，不唸音素）
+    單字本身也要看得見，只把開頭那個字母遮起來，
+    不然沒聽清楚的時候畫面上等於什麼題目都沒有。 */
 function q2Word() {
-  const letter = pick(LETTERS);
-  const [word] = WORDS[letter];
+  const letter = pick(WORD_LETTERS);
+  const [word] = wordOf(letter);
+  const masked = '_' + word.slice(1);
   return {
     promptHtml: `
       <button class="speak-btn" data-say="${word}" type="button" aria-label="再聽一次">🔊</button>
+      <div class="word-masked">${masked}</div>
       <div class="q-expr">這個字是哪個字母開頭？</div>`,
     options: optionsOf(letter),
     say: word,
@@ -142,8 +168,8 @@ function q2Word() {
 
 /** 看圖選字母 */
 function q2Pic() {
-  const letter = pick(LETTERS);
-  const [word, emoji] = WORDS[letter];
+  const letter = pick(WORD_LETTERS);
+  const [word, emoji] = wordOf(letter);
   return {
     promptHtml: `
       <div class="pic-big">${emoji}</div>
@@ -156,12 +182,20 @@ function q2Pic() {
 /* ================= 出題 ================= */
 
 function makeQuestion(index) {
+  if (randomMode) {
+    const pool = hasVoice
+      ? [q1Case, q1Listen, q1Sequence, q2Word, q2Pic]
+      : [q1Case, q1Sequence, q2Pic];
+    const fn = pick(pool);
+    return fn === q1Case || fn === q1Listen ? fn(rnd(2) === 0) : fn();
+  }
+
   const useConfusing = index < CONFUSING_QUOTA;
 
   if (state.level === 1) {
+    if (useConfusing) return hasVoice ? pick([q1Case, q1Listen])(true) : q1Case(true);
     const pool = hasVoice ? [q1Case, q1Case, q1Listen, q1Sequence] : [q1Case, q1Case, q1Sequence];
-    const fn = useConfusing ? pick([q1Case, q1Listen].filter(f => hasVoice || f !== q1Listen)) : pick(pool);
-    return fn(useConfusing);
+    return pick(pool)(false);
   }
 
   // Level 2：有語音就聽單字與看圖交替，沒語音只出看圖
@@ -172,14 +206,24 @@ function makeQuestion(index) {
 /* ================= 畫面 ================= */
 
 function renderHead() {
-  const note = state.level === 1
-    ? `再連續 ${Math.max(0, 2 - state.streak)} 輪全對就解鎖新玩法`
-    : (hasVoice ? '聽聽看，選出開頭的字母' : '這台裝置沒有英文語音，改成看圖選字母');
+  const note = randomMode
+    ? '什麼題型都會出現，輕鬆玩！'
+    : state.level === 1
+      ? `再連續 ${Math.max(0, 2 - state.streak)} 輪全對就解鎖新玩法`
+      : (hasVoice ? '聽聽看，選出開頭的字母' : '這台裝置沒有英文語音，改成看圖選字母');
 
   el.head.innerHTML = `
-    <span class="level-chip">${LEVEL_NAME[state.level]}</span>
+    <span class="level-chip${randomMode ? ' random' : ''}">${randomMode ? '🎲 隨機模式' : LEVEL_NAME[state.level]}</span>
     <span class="eng-note">${note}</span>
+    <button class="kid-btn plain mode-btn" id="btnMode" type="button">
+      ${randomMode ? '← 回到關卡' : '🎲 隨機模式'}
+    </button>
   `;
+  el.head.querySelector('#btnMode').addEventListener('click', () => {
+    randomMode = !randomMode;
+    renderHead();
+    quiz.start();
+  });
 }
 
 function startRound() {
@@ -188,15 +232,14 @@ function startRound() {
     roundSize: ROUND,
     makeQuestion,
     buddy: '🐧',
-    onSpeak: t => speech.say(t),
+    onSpeak: t => speech.say(t, 'en'),
     onDone: () => { renderHead(); quiz.start(); },
     onFinish({ correct, total }) {
-      if (state.level === 1) {
+      if (!randomMode && state.level === 1) {
         state.streak = correct === total ? state.streak + 1 : 0;
         if (state.streak >= 2) { state.level = 2; state.streak = 0; }
+        saveState();
       }
-      saveState();
-
       const gained = correct === total ? 2 : 1;
       stars.add('english', gained);
       return gained;
@@ -226,13 +269,13 @@ export default {
     built = true;
 
     speech.prepare().then(ok => {
-      hasVoice = ok;
+      hasVoice = ok.en;
       startRound();
     });
   },
 
   unmount() {
     quiz?.pause();
-    if ('speechSynthesis' in window) speechSynthesis.cancel();
+    speech.stop();
   },
 };
