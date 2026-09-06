@@ -578,3 +578,127 @@ button { font-family: inherit; }
 }
 .star-badge[hidden] { display: none; }
 .app.collapsed .star-badge { display: none; }
+
+/* ---------- 關卡地圖 ---------- */
+.map-wrap {
+  position: relative;
+  overflow: hidden;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  text-align: center;
+}
+.map-wrap[hidden] { display: none; }
+
+.map-track {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.map-link {
+  width: 26px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--line);
+}
+
+.node {
+  position: relative;
+  width: 88px;
+  min-height: 88px;
+  padding: 10px 4px 8px;
+  border: 4px solid var(--line);
+  border-radius: 20px;
+  background: #fffdf8;
+  font-family: inherit;
+  cursor: pointer;
+}
+.node .node-face  { display: block; font-size: 30px; line-height: 1.2; }
+.node .node-label { display: block; font-size: 14px; font-weight: 700; color: var(--ink-soft); }
+
+.node.cleared { background: #eafaf7; border-color: var(--mint); }
+.node.current { border-color: var(--brand); background: #fff2dd; box-shadow: var(--shadow); }
+.node.locked  { opacity: .5; cursor: default; }
+.node.chest   { cursor: default; border-style: dashed; }
+.node.chest.open {
+  border-style: solid;
+  border-color: var(--brand);
+  background: #fff2dd;
+  animation: chestPop .6s ease;
+}
+
+@keyframes chestPop {
+  0%   { transform: scale(1) rotate(0); }
+  25%  { transform: scale(1.12) rotate(-6deg); }
+  50%  { transform: scale(1.12) rotate(6deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+
+/* 角色 */
+.hero {
+  position: absolute;
+  top: -34px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 30px;
+  pointer-events: none;
+}
+.hero.hop { animation: heroHop .9s ease; }
+
+@keyframes heroHop {
+  0%   { transform: translateX(-160%) translateY(0); }
+  30%  { transform: translateX(-110%) translateY(-24px); }
+  55%  { transform: translateX(-70%)  translateY(0); }
+  75%  { transform: translateX(-55%)  translateY(-14px); }
+  100% { transform: translateX(-50%)  translateY(0); }
+}
+
+.map-hint { margin: 0; font-size: 20px; font-weight: 700; color: var(--brand-deep); }
+
+.map-actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+
+/* 過關時從天上掉下來的星星 */
+.fall {
+  position: absolute;
+  top: -40px;
+  font-size: 26px;
+  pointer-events: none;
+  animation: fallDown 1.8s ease-in forwards;
+}
+@keyframes fallDown {
+  0%   { transform: translateY(0) rotate(0); opacity: 1; }
+  100% { transform: translateY(420px) rotate(240deg); opacity: 0; }
+}
+
+/* ---------- 十格框（20 以內進退位） ---------- */
+.ten-frames {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.tf {
+  display: grid;
+  grid-template-columns: repeat(5, 30px);
+  grid-auto-rows: 30px;
+  gap: 3px;
+  padding: 5px;
+  border: 3px solid var(--line);
+  border-radius: 10px;
+  background: #fffdf8;
+}
+
+.tf .cell {
+  border: 2px solid var(--line);
+  border-radius: 6px;
+}
+.tf .cell.on.blue   { background: var(--sky);  border-color: var(--sky); }
+.tf .cell.on.orange { background: var(--brand); border-color: var(--brand); }
+.tf .cell.off       { opacity: .3; }
