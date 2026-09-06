@@ -3,7 +3,7 @@
    S2：關卡地圖、Level 3（個位數進位加法，十格框）、升降級、Level 1 後備題庫
    Level 2 以上一律純算式：圖案直接畫出答案的話，小朋友會用數的而不是用算的，
    所以圖案改成「同一題連錯兩次」才出現的提示。
-   題目以單純的「個位數 ＋/－ 個位數」為主，減法一定是前面大於後面。
+   題目只有單純的「個位數 ＋/－ 個位數」，減法一定是前面大於後面；不出填空題。
    運算元一律是個位數（1–9）；因此不出「13 － 5」這種需要兩位數被減數的退位減法
    內容設計見 docs/CONTENT-PLAN.md */
 
@@ -125,37 +125,6 @@ function l2Sub() {
   };
 }
 
-function l2MakeTen() {
-  const a = 1 + rnd(9);
-  return {
-    answer: 10 - a,
-    promptHtml: `<div class="q-expr big">${a} ＋ ? ＝ 10</div>`,
-    sayZh: `${a} 加多少等於 10`,
-  };
-}
-
-/** 缺加數：3 ＋ ? ＝ 8 */
-function l2MissingAdd() {
-  const sum = 4 + rnd(6);             // 4..9
-  const a = 1 + rnd(sum - 1);
-  return {
-    answer: sum - a,
-    promptHtml: `<div class="q-expr big">${a} ＋ ? ＝ ${sum}</div>`,
-    sayZh: `${a} 加多少等於 ${sum}`,
-  };
-}
-
-/** 缺減數：8 － ? ＝ 3 */
-function l2MissingSub() {
-  const a = 4 + rnd(6);               // 4..9
-  const left = 1 + rnd(a - 1);        // 結果一定小於被減數
-  return {
-    answer: a - left,
-    promptHtml: `<div class="q-expr big">${a} － ? ＝ ${left}</div>`,
-    sayZh: `${a} 減多少等於 ${left}`,
-  };
-}
-
 /* --- Level 3：20 以內進位退位（十格框） --- */
 
 /** 一個十格框：filled 個填色，其中最後 crossed 個畫成拿走 */
@@ -195,7 +164,7 @@ function l3CarryPlain() {
 
 const POOL = {
   1: [l1Count, l1Count, l1Compare, l1Sequence],
-  2: [l2Add, l2Add, l2Add, l2Sub, l2Sub, l2Sub, l2MakeTen, l2MissingAdd, l2MissingSub],
+  2: [l2Add, l2Sub],
   3: [l3CarryAdd, l3CarryAdd, l3CarryPlain],
 };
 

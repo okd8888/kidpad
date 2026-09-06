@@ -1,5 +1,6 @@
 /* 英文練習
-   S3：Level 1 字母認讀（快速過關）、Level 2 發音與看圖選字母、夥伴角色 🐧
+   S3：Level 1 字母認讀（快速過關）、Level 2 看圖選開頭字母、夥伴角色 🐧
+   題目不靠「用聽的」作答；語音只是順便唸給他聽的輔助。
    26 個字母小朋友都認得，所以 Level 1 的任務是抓出還會混淆的那幾組。
    內容設計見 docs/CONTENT-PLAN.md */
 
@@ -116,21 +117,6 @@ function q1Case(useConfusing) {
   };
 }
 
-/** 聽音找字母（要有語音） */
-function q1Listen(useConfusing) {
-  const { answer, others } = useConfusing
-    ? confusingPair()
-    : { answer: pick(LETTERS), others: [] };
-
-  return {
-    promptHtml: `
-      <button class="speak-btn" data-say="${answer}" type="button" aria-label="再聽一次">🔊</button>
-      <div class="q-expr">聽聽看，是哪一個字母？</div>`,
-    options: optionsOf(answer, others),
-    say: answer,
-  };
-}
-
 /** 字母順序 */
 function q1Sequence() {
   const i = rnd(LETTERS.length - 3);
@@ -149,32 +135,30 @@ function q1Sequence() {
 
 /* --- Level 2：聽發音 --- */
 
-/** 聽單字選開頭字母（唸整個單字，不唸音素）
-    單字本身也要看得見，只把開頭那個字母遮起來，
-    不然沒聽清楚的時候畫面上等於什麼題目都沒有。 */
-function q2Word() {
-  const letter = pick(WORD_LETTERS);
-  const [word] = wordOf(letter);
-  const masked = '_' + word.slice(1);
-  return {
-    promptHtml: `
-      <button class="speak-btn" data-say="${word}" type="button" aria-label="再聽一次">🔊</button>
-      <div class="word-masked">${masked}</div>
-      <div class="q-expr">這個字是哪個字母開頭？</div>`,
-    options: optionsOf(letter),
-    say: word,
-  };
-}
-
-/** 看圖選字母 */
-function q2Pic() {
+/** 看圖 + 遮住第一個字母的單字，選出開頭字母（大寫） */
+function q2Guess() {
   const letter = pick(WORD_LETTERS);
   const [word, emoji] = wordOf(letter);
   return {
     promptHtml: `
       <div class="pic-big">${emoji}</div>
-      <div class="q-expr">${word} 是哪個字母開頭？</div>`,
+      <div class="word-masked">${'_' + word.slice(1)}</div>
+      <div class="q-expr">這個字是哪個字母開頭？</div>`,
     options: optionsOf(letter),
+    say: hasVoice ? word : null,     // 順便唸給他聽，但不聽也答得出來
+  };
+}
+
+/** 同樣看圖，但要選小寫，順便練大小寫 */
+function q2Lower() {
+  const letter = pick(WORD_LETTERS);
+  const [word, emoji] = wordOf(letter);
+  return {
+    promptHtml: `
+      <div class="pic-big">${emoji}</div>
+      <div class="word-masked">${'_' + word.slice(1)}</div>
+      <div class="q-expr">開頭是哪一個小寫字母？</div>`,
+    options: optionsOf(letter.toLowerCase()),
     say: hasVoice ? word : null,
   };
 }
@@ -183,24 +167,17 @@ function q2Pic() {
 
 function makeQuestion(index) {
   if (randomMode) {
-    const pool = hasVoice
-      ? [q1Case, q1Listen, q1Sequence, q2Word, q2Pic]
-      : [q1Case, q1Sequence, q2Pic];
-    const fn = pick(pool);
-    return fn === q1Case || fn === q1Listen ? fn(rnd(2) === 0) : fn();
+    const fn = pick([q1Case, q1Case, q1Sequence, q2Guess, q2Lower]);
+    return fn === q1Case ? fn(rnd(2) === 0) : fn();
   }
-
-  const useConfusing = index < CONFUSING_QUOTA;
 
   if (state.level === 1) {
-    if (useConfusing) return hasVoice ? pick([q1Case, q1Listen])(true) : q1Case(true);
-    const pool = hasVoice ? [q1Case, q1Case, q1Listen, q1Sequence] : [q1Case, q1Case, q1Sequence];
-    return pick(pool)(false);
+    // 前幾題固定考容易混淆的那幾組
+    if (index < CONFUSING_QUOTA) return q1Case(true);
+    return pick([q1Case, q1Case, q1Sequence])(false);
   }
 
-  // Level 2：有語音就聽單字與看圖交替，沒語音只出看圖
-  if (!hasVoice) return q2Pic();
-  return index % 2 === 0 ? q2Word() : q2Pic();
+  return index % 2 === 0 ? q2Guess() : q2Lower();
 }
 
 /* ================= 畫面 ================= */
@@ -210,7 +187,7 @@ function renderHead() {
     ? '什麼題型都會出現，輕鬆玩！'
     : state.level === 1
       ? `再連續 ${Math.max(0, 2 - state.streak)} 輪全對就解鎖新玩法`
-      : (hasVoice ? '聽聽看，選出開頭的字母' : '這台裝置沒有英文語音，改成看圖選字母');
+      : '看圖片，選出開頭的字母';
 
   el.head.innerHTML = `
     <span class="level-chip${randomMode ? ' random' : ''}">${randomMode ? '🎲 隨機模式' : LEVEL_NAME[state.level]}</span>
