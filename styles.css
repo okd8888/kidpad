@@ -781,3 +781,73 @@ button { font-family: inherit; }
 
 /* 英文練習的選項是字母，用等寬一點的字型比較不會歪 */
 .quiz-options .opt-btn { font-family: inherit; }
+
+/* ---------- 筆劃練習：關卡選單 ---------- */
+.lv-block { margin-bottom: 22px; }
+
+.lv-title {
+  margin: 0 0 10px;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--brand-deep);
+}
+
+.card-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.lesson-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 96px;
+  min-height: 100px;
+  padding: 10px 6px;
+  border: 4px solid var(--line);
+  border-radius: 18px;
+  background: #fffdf8;
+  color: var(--ink);
+  font-family: inherit;
+  cursor: pointer;
+  transition: transform .1s ease, background .15s ease;
+}
+.lesson-card:hover { background: #fff2dd; border-color: var(--brand); }
+.lesson-card:active { transform: scale(.97); }
+.lesson-card.wide { width: 190px; }
+
+.lc-big   { font-size: 38px; font-weight: 800; line-height: 1.1; }
+.lc-title { font-size: 20px; font-weight: 800; }
+.lc-sub   { font-size: 16px; color: var(--ink-soft); }
+.lc-stars { font-size: 13px; min-height: 18px; color: var(--brand-deep); }
+.lc-prog  { font-size: 15px; font-weight: 700; color: var(--mint); }
+
+/* ---------- 筆劃練習：練習畫面 ---------- */
+.practice-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.practice-head .kid-btn { min-height: 46px; padding: 6px 16px; font-size: 17px; }
+
+.practice-title {
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--brand-deep);
+}
+.practice-hint { font-size: 18px; font-weight: 700; color: var(--ink-soft); }
+
+.reward-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* 練習畫面裡的字卡是按鈕，去掉預設外觀 */
+.char-card { font-family: inherit; }
