@@ -9,6 +9,6 @@
 
 export const registry = [
   { id: 'stroke',  title: '筆劃練習', icon: '✍️', load: () => import('./stroke.js') },
-  { id: 'math',    title: '算術練習', icon: '➕', soon: true, load: () => import('./math.js') },
+  { id: 'math',    title: '算術練習', icon: '➕', load: () => import('./math.js') },
   { id: 'english', title: '英文練習', icon: '🔤', soon: true, load: () => import('./english.js') },
 ];

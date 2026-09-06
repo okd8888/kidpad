@@ -4,6 +4,7 @@
 
 import { registry } from './modules/index.js';
 import { store } from './lib/storage.js';
+import { stars } from './lib/stars.js';
 
 const navEl    = document.getElementById('moduleNav');
 const tabbarEl = document.getElementById('tabbar');
@@ -26,9 +27,20 @@ function buildNav() {
       `<span class="module-icon">${entry.icon}</span>` +
       `<span class="module-title">${entry.title}` +
       (entry.soon ? '<span class="soon">準備中</span>' : '') +
-      `</span>`;
+      `</span>` +
+      `<span class="star-badge" hidden></span>`;
     btn.addEventListener('click', () => activate(entry.id));
     navEl.appendChild(btn);
+  });
+
+  // 星星數變動時更新按鈕上的徽章
+  stars.onChange(() => {
+    navEl.querySelectorAll('.module-btn').forEach(b => {
+      const n = stars.get(b.dataset.id);
+      const badge = b.querySelector('.star-badge');
+      badge.hidden = n === 0;
+      badge.textContent = `⭐${n}`;
+    });
   });
 }
 

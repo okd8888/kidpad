@@ -429,7 +429,152 @@ button { font-family: inherit; }
 
 @media (max-width: 820px) {
   :root { --sidebar-w: 92px; }
-  .brand-text, .foot-text, .module-title { display: none; }
+  .brand-text, .foot-text, .module-title, .star-badge { display: none; }
   .module-btn { justify-content: center; padding: 12px 4px; }
   .collapse-btn { display: none; }
 }
+
+/* ---------- 選擇題骨架（算術、英文共用） ---------- */
+.quiz {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  min-height: 100%;
+}
+
+.quiz-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  flex-wrap: wrap;
+}
+.quiz-stars { font-size: 22px; letter-spacing: 2px; }
+.quiz-count { font-size: 18px; font-weight: 700; color: var(--ink-soft); }
+
+/* 連對標籤 */
+.combo {
+  padding: 6px 18px;
+  border-radius: 999px;
+  background: #fff2dd;
+  color: var(--brand-deep);
+  font-size: 20px;
+  font-weight: 800;
+}
+.combo[hidden] { display: none; }
+.combo.hot { background: #ffe0cc; color: #d95d00; }
+.combo.pop { animation: comboPop .35s ease; }
+
+@keyframes comboPop {
+  0%   { transform: scale(.6); opacity: 0; }
+  60%  { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* 題目區 */
+.quiz-prompt {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  text-align: center;
+}
+
+.q-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.q-pic { font-size: 40px; line-height: 1.2; word-break: break-all; }
+.q-pic .eaten { opacity: .25; }
+.q-op { font-size: 36px; font-weight: 800; color: var(--brand-deep); }
+
+.q-expr { font-size: 38px; font-weight: 800; }
+.q-expr.big { font-size: 56px; }
+
+/* 選項按鈕 */
+.quiz-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: center;
+}
+
+.opt-btn {
+  min-width: 120px;
+  min-height: 80px;
+  padding: 10px 20px;
+  border: 4px solid var(--line);
+  border-radius: 20px;
+  background: #fffdf8;
+  color: var(--ink);
+  font-size: 40px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform .1s ease, background .15s ease, opacity .25s ease;
+}
+.opt-btn:hover:not(:disabled) { background: #fff2dd; }
+.opt-btn.right {
+  background: var(--mint);
+  border-color: var(--mint);
+  color: #06423d;
+  animation: optPop .3s ease;
+}
+.opt-btn.wrong {
+  opacity: .35;
+  background: var(--bg);
+  animation: optShake .35s ease;
+  cursor: default;
+}
+
+@keyframes optPop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+@keyframes optShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+
+.quiz-tip {
+  min-height: 30px;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--brand-deep);
+}
+
+/* 答對時噴出的星星 */
+.spark {
+  position: absolute;
+  font-size: 20px;
+  pointer-events: none;
+  animation: sparkFly .7s ease-out forwards;
+}
+@keyframes sparkFly {
+  0%   { transform: translate(-50%, -50%) scale(.4); opacity: 1; }
+  100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.1); opacity: 0; }
+}
+
+/* 左側選單的星星徽章 */
+.star-badge {
+  margin-left: auto;
+  flex: 0 0 auto;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: #fff2dd;
+  color: var(--brand-deep);
+  font-size: 15px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.star-badge[hidden] { display: none; }
+.app.collapsed .star-badge { display: none; }

@@ -6,6 +6,7 @@
 import { store } from '../lib/storage.js';
 import { sound } from '../lib/sound.js';
 import { loadCharData } from '../lib/hanzi-data.js';
+import { stars } from '../lib/stars.js';
 
 const KEY_CHARS   = 'kidpad.stroke.chars';
 const KEY_RECORDS = 'kidpad.stroke.records';
@@ -287,6 +288,7 @@ function recordDone(ch) {
   rec.last = Date.now();
   records[ch] = rec;
   saveRecords();
+  stars.add('stroke', 1);        // 寫完一個字 = 1 顆星
   renderList();
 }
 
