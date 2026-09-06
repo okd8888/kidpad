@@ -200,7 +200,8 @@ function levelFor(ctx) {
 const usedThisRound = new Set();
 
 function makeQuestion(index, ctx) {
-  if (index === 0) usedThisRound.clear();
+  // 一輪之內盡量不重複；隨機模式不會結束，所以用滾動視窗而不是整個清空
+  if (index === 0 || usedThisRound.size >= 12) usedThisRound.clear();
 
   const pool = randomMode ? ALL_TYPES : POOL[levelFor(ctx)];
   let q;

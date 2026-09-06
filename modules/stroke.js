@@ -537,7 +537,10 @@ function goNext() {
   }
   // 隨機練習寫完一批就再抽一批，想停再按「← 關卡」
   if (lesson.type === 'random') {
-    lesson.items = randomItems();
+    const justDone = currentItem()?.progKey;
+    let next = randomItems();
+    for (let i = 0; i < 5 && next[0]?.progKey === justDone; i++) next = randomItems();
+    lesson.items = next;
     itemIndex = 0;
     renderItemList();
     mountWriter();
