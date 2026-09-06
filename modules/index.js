@@ -11,4 +11,7 @@ export const registry = [
   { id: 'stroke',  title: '筆劃練習', icon: '✍️', load: () => import('./stroke.js') },
   { id: 'math',    title: '算術練習', icon: '➕', load: () => import('./math.js') },
   { id: 'english', title: '英文練習', icon: '🔤', load: () => import('./english.js') },
+  { id: 'bopomo',  title: '注音符號', icon: 'ㄅ',  load: () => import('./bopomo.js') },
+  { id: 'clock',   title: '時鐘',     icon: '🕐', load: () => import('./clock.js') },
+  { id: 'money',   title: '認識錢幣', icon: '💰', load: () => import('./money.js') },
 ];
