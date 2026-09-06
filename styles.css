@@ -33,7 +33,10 @@ html, body {
   -webkit-text-size-adjust: 100%;
 }
 
-button { font-family: inherit; }
+button {
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;   /* 點下去不要留一層灰 */
+}
 
 /* ---------- 版面 ---------- */
 .app {
@@ -90,7 +93,9 @@ button { font-family: inherit; }
   font-size: 16px;
   cursor: pointer;
 }
-.collapse-btn:hover { background: var(--line); }
+@media (hover: hover) and (pointer: fine) {
+  .collapse-btn:hover { background: var(--line); }
+}
 
 .app.collapsed .brand-text,
 .app.collapsed .foot-text,
@@ -123,7 +128,9 @@ button { font-family: inherit; }
   cursor: pointer;
   transition: transform .1s ease, background .15s ease;
 }
-.module-btn:hover { background: #fff2dd; }
+@media (hover: hover) and (pointer: fine) {
+  .module-btn:hover { background: #fff2dd; }
+}
 .module-btn:active { transform: scale(.97); }
 .module-btn.active {
   background: #fff2dd;
@@ -365,8 +372,10 @@ button { font-family: inherit; }
   cursor: pointer;
   display: none;
 }
-.char-card:hover .del,
 .char-card.active .del { display: block; }
+@media (hover: hover) and (pointer: fine) {
+  .char-card:hover .del { display: block; }
+}
 
 .side-note { font-size: 15px; color: var(--ink-soft); }
 
@@ -520,7 +529,9 @@ button { font-family: inherit; }
   cursor: pointer;
   transition: transform .1s ease, background .15s ease, opacity .25s ease;
 }
-.opt-btn:hover:not(:disabled) { background: #fff2dd; }
+@media (hover: hover) and (pointer: fine) {
+  .opt-btn:hover:not(:disabled) { background: #fff2dd; }
+}
 .opt-btn.right {
   background: var(--mint);
   border-color: var(--mint);
@@ -815,7 +826,9 @@ button { font-family: inherit; }
   cursor: pointer;
   transition: transform .1s ease, background .15s ease;
 }
-.lesson-card:hover { background: #fff2dd; border-color: var(--brand); }
+@media (hover: hover) and (pointer: fine) {
+  .lesson-card:hover { background: #fff2dd; border-color: var(--brand); }
+}
 .lesson-card:active { transform: scale(.97); }
 .lesson-card.wide { width: 190px; }
 
