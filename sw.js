@@ -1,6 +1,6 @@
 /* 極簡 Service Worker：優先走網路（內容永遠最新），沒網路時用快取（離線也能練字）
    筆順資料檔太多，不預先快取，改成用過一次就自動存起來。 */
-const CACHE = 'kidpad-v15';
+const CACHE = 'kidpad-v16';
 const ASSETS = [
   './', './index.html', './styles.css', './app.js',
   './modules/index.js', './modules/stroke.js', './modules/math.js', './modules/english.js',

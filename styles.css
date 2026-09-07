@@ -798,6 +798,75 @@ button {
 .stroke-main { position: relative; }
 
 /* ---------- 英文練習 ---------- */
+.english-adventure {
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+.picnic-intro {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 24px;
+  padding: 24px 28px 30px;
+  border-radius: 28px 28px 12px 28px;
+  background: #fff2c7;
+  box-shadow: 0 12px 28px rgba(132, 96, 40, .12);
+}
+
+.adventure-kicker {
+  margin: 0 0 6px;
+  color: #9a5b00;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: .08em;
+}
+
+.picnic-intro h2 { margin: 0 0 8px; font-size: clamp(25px, 4vw, 36px); line-height: 1.25; text-wrap: balance; }
+.picnic-intro p:last-child { margin: 0; color: var(--ink-soft); font-size: 17px; }
+.picnic-scene { font-size: clamp(68px, 11vw, 112px); filter: drop-shadow(0 8px 4px rgba(93, 62, 31, .13)); }
+
+.word-shelf {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 18px 0;
+}
+
+.word-card {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  min-height: 160px;
+  padding: 14px 10px;
+  border: 2px solid #f0e3d2;
+  border-radius: 18px;
+  background: #fffdf8;
+  color: var(--ink);
+  cursor: pointer;
+  box-shadow: 0 6px 0 #eadbc7;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+
+.word-card:hover, .word-card:focus-visible { border-color: var(--brand); transform: translateY(-3px); box-shadow: 0 9px 0 #eadbc7; outline: none; }
+.word-card:active { transform: translateY(3px); box-shadow: 0 3px 0 #eadbc7; }
+.word-card-pic { font-size: 60px; line-height: 1; }
+.word-card-en, .word-full { font: 800 25px/1.15 "Segoe UI", Arial, sans-serif; color: var(--grape); }
+.word-card-zh { color: var(--ink-soft); font-size: 15px; font-weight: 700; }
+
+.picnic-actions { display: flex; align-items: stretch; justify-content: space-between; gap: 14px; }
+.start-picnic { min-width: min(100%, 270px); font-size: 19px; }
+.picnic-sticker { display: flex; align-items: center; gap: 10px; min-width: 240px; padding: 10px 16px; border: 2px dashed #c9bca9; border-radius: 16px; color: var(--ink-soft); background: #f3eee7; }
+.picnic-sticker > span { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 12px; background: #d8d0c5; font-size: 28px; }
+.picnic-sticker div { display: grid; gap: 2px; }
+.picnic-sticker small { font-size: 13px; }
+.picnic-sticker.unlocked { border-style: solid; border-color: #f0c85a; color: #674214; background: #fff5cf; }
+.picnic-sticker.unlocked > span { background: #fff; }
+
+.word-say { margin: 0 8px 8px 0; padding: 8px 12px; border: 0; border-radius: 12px; background: #eaf9ff; font-size: 25px; cursor: pointer; vertical-align: middle; }
+.word-say:focus-visible { outline: 3px solid var(--brand); outline-offset: 2px; }
+.word-full { display: inline-block; font-size: 46px; vertical-align: middle; }
+
 .eng-head,
 .lvl-head {
   display: flex;
@@ -861,6 +930,15 @@ button {
 
 /* 英文練習的選項是字母，用等寬一點的字型比較不會歪 */
 .quiz-options .opt-btn { font-family: inherit; }
+
+@media (max-width: 760px) {
+  .picnic-intro { grid-template-columns: 1fr; padding: 20px; }
+  .picnic-scene { justify-self: end; margin-top: -18px; }
+  .word-shelf { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .word-card { min-height: 142px; }
+  .picnic-actions { flex-direction: column; }
+  .picnic-sticker { min-width: 0; }
+}
 
 /* ---------- 筆劃練習：關卡選單 ---------- */
 .lv-block { margin-bottom: 22px; }

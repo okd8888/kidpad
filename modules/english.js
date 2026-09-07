@@ -1,272 +1,140 @@
-/* 英文練習
-   S3：Level 1 字母認讀（快速過關）、Level 2 看圖選開頭字母、夥伴角色 🐧
-   題目不靠「用聽的」作答；語音只是順便唸給他聽的輔助。
-   26 個字母小朋友都認得，所以 Level 1 的任務是抓出還會混淆的那幾組。
-   內容設計見 docs/CONTENT-PLAN.md */
+/* 英文野餐：先認識單字，再用三種玩法反覆連結圖片、文字與開頭字母。 */
 
 import { createQuizView } from '../lib/quiz-ui.js';
 import { stars } from '../lib/stars.js';
 import { store } from '../lib/storage.js';
 import { speech } from '../lib/speech.js';
 
-const ROUND = 6;
 const KEY = 'kidpad.english.progress';
-const CONFUSING_QUOTA = 4;   // 一輪至少幾題來自易混淆組
-
-/** 容易搞混的字母，這是這個年紀真正的難點 */
-const CONFUSING = [
-  ['b', 'd'],
-  ['p', 'q'],
-  ['M', 'N', 'W'],
-  ['i', 'j'],
-  ['u', 'v'],
+const ROUND = 6;
+const WORDS = [
+  { letter: 'A', word: 'apple',  zh: '蘋果', emoji: '🍎' },
+  { letter: 'C', word: 'cake',   zh: '蛋糕', emoji: '🍰' },
+  { letter: 'E', word: 'egg',    zh: '雞蛋', emoji: '🥚' },
+  { letter: 'G', word: 'grapes', zh: '葡萄', emoji: '🍇' },
+  { letter: 'J', word: 'juice',  zh: '果汁', emoji: '🧃' },
+  { letter: 'M', word: 'milk',   zh: '牛奶', emoji: '🥛' },
+  { letter: 'O', word: 'orange', zh: '柳橙', emoji: '🍊' },
+  { letter: 'P', word: 'pizza',  zh: '披薩', emoji: '🍕' },
 ];
 
-/** 字母 → 好幾個代表單字，題目才不會每次都一樣 */
-const WORDS = {
-  A: [['apple', '🍎'], ['ant', '🐜']],
-  B: [['ball', '⚽'], ['bear', '🐻'], ['bus', '🚌']],
-  C: [['cat', '🐱'], ['car', '🚗'], ['cake', '🍰']],
-  D: [['dog', '🐶'], ['duck', '🦆']],
-  E: [['egg', '🥚'], ['elephant', '🐘']],
-  F: [['fish', '🐟'], ['frog', '🐸'], ['flower', '🌸']],
-  G: [['goat', '🐐'], ['grapes', '🍇']],
-  H: [['hat', '🎩'], ['house', '🏠'], ['horse', '🐴']],
-  I: [['ice', '🧊'], ['ice cream', '🍦']],
-  J: [['jet', '✈️'], ['juice', '🧃']],
-  K: [['key', '🔑'], ['kite', '🪁']],
-  L: [['lion', '🦁'], ['leaf', '🍃']],
-  M: [['moon', '🌙'], ['milk', '🥛'], ['monkey', '🐵']],
-  N: [['nose', '👃'], ['nut', '🥜']],
-  O: [['orange', '🍊'], ['owl', '🦉']],
-  P: [['pig', '🐷'], ['pizza', '🍕'], ['pencil', '✏️']],
-  Q: [['queen', '👑'], ['question', '❓']],
-  R: [['rabbit', '🐰'], ['rainbow', '🌈']],
-  S: [['sun', '☀️'], ['star', '⭐'], ['snake', '🐍']],
-  T: [['tiger', '🐯'], ['tree', '🌳'], ['train', '🚆']],
-  U: [['umbrella', '☂️'], ['unicorn', '🦄']],
-  V: [['van', '🚐'], ['violin', '🎻']],
-  W: [['water', '💧'], ['watch', '⌚'], ['whale', '🐳']],
-  Y: [['yellow', '🟡'], ['yoyo', '🪀']],
-  Z: [['zebra', '🦓'], ['zoo', '🦁']],
-};
-
-/** 認讀題用得到全部 26 個字母；X 開頭的常用單字對這個年紀太難，發音題就跳過它 */
-const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-const WORD_LETTERS = Object.keys(WORDS);
-
-const LEVEL_NAME = {
-  1: 'Level 1 · 認字母',
-  2: 'Level 2 · 聽發音',
-};
-
 let built = false;
-let el = null;
+let root = null;
 let quiz = null;
 let hasVoice = false;
 let state = null;
-let randomMode = false;
 
-const rnd = n => Math.floor(Math.random() * n);
-const pick = arr => arr[rnd(arr.length)];
+const pick = items => items[Math.floor(Math.random() * items.length)];
+const shuffle = items => [...items].sort(() => Math.random() - 0.5);
 
 function loadState() {
-  state = store.get(KEY, null) || { level: 1, streak: 0 };
+  const saved = store.get(KEY, null) || {};
+  state = {
+    rounds: saved.rounds || 0,
+    sticker: saved.sticker || false,
+    skills: saved.skills || {
+      pictureToWord: { tried: 0, firstTry: 0 },
+      wordToPicture: { tried: 0, firstTry: 0 },
+      firstLetter: { tried: 0, firstTry: 0 },
+    },
+  };
 }
+
 function saveState() { store.set(KEY, state); }
+function speak(word) { if (hasVoice) speech.say(word, 'en'); }
 
-/** 這個字母的其中一個代表單字 */
-function wordOf(letter) { return pick(WORDS[letter]); }
-
-/* ================= 題庫 ================= */
-
-/** 從易混淆組挑一個字母，並用同組的當干擾選項 */
-function confusingPair() {
-  const group = pick(CONFUSING);
-  const answer = pick(group);
-  return { answer, others: group.filter(c => c !== answer) };
+function choices(answer, label) {
+  return shuffle([answer, ...shuffle(WORDS.filter(item => item.word !== answer.word)).slice(0, 2)])
+    .map(item => ({ text: label(item), correct: item.word === answer.word }));
 }
-
-function optionsOf(answer, others = []) {
-  const set = new Set([answer, ...others]);
-  while (set.size < 3) {
-    const c = pick(LETTERS);
-    set.add(answer === answer.toLowerCase() ? c.toLowerCase() : c);
-  }
-  return [...set]
-    .slice(0, 3)
-    .sort(() => Math.random() - 0.5)
-    .map(v => ({ text: v, correct: v === answer }));
-}
-
-/* --- Level 1：認字母 --- */
-
-/** 大小寫配對：看大寫選小寫 */
-function q1Case(useConfusing) {
-  const { answer, others } = useConfusing
-    ? confusingPair()
-    : { answer: pick(LETTERS).toLowerCase(), others: [] };
-
-  return {
-    promptHtml: `
-      <div class="letter-big">${answer.toUpperCase()}</div>
-      <div class="q-expr">哪一個是它的小寫？</div>`,
-    options: optionsOf(answer.toLowerCase(), others.map(o => o.toLowerCase())),
-    say: hasVoice ? answer.toUpperCase() : null,
-    sayZh: '哪一個是它的小寫',
-  };
-}
-
-/** 字母順序 */
-function q1Sequence() {
-  const i = rnd(LETTERS.length - 3);
-  const seq = LETTERS.slice(i, i + 4);
-  const miss = 1 + rnd(2);
-  const answer = seq[miss];
-  const shown = seq.map((c, k) => (k === miss ? '□' : c)).join('　');
-  return {
-    promptHtml: `
-      <div class="letter-row">${shown}</div>
-      <div class="q-expr">中間少了哪一個？</div>`,
-    options: optionsOf(answer, [seq[miss === 1 ? 2 : 1]]),
-    sayZh: '中間少了哪一個',
-  };
-}
-
-/* --- Level 2：聽發音 --- */
-
-/** 看圖 + 遮住第一個字母的單字，選出開頭字母（大寫） */
-function q2Guess() {
-  const letter = pick(WORD_LETTERS);
-  const [word, emoji] = wordOf(letter);
-  return {
-    promptHtml: `
-      <div class="pic-big">${emoji}</div>
-      <div class="word-masked">${'_' + word.slice(1)}</div>
-      <div class="q-expr">這個字是哪個字母開頭？</div>`,
-    options: optionsOf(letter),
-    say: hasVoice ? word : null,     // 順便唸給他聽，但不聽也答得出來
-  };
-}
-
-/** 同樣看圖，但要選小寫，順便練大小寫 */
-function q2Lower() {
-  const letter = pick(WORD_LETTERS);
-  const [word, emoji] = wordOf(letter);
-  return {
-    promptHtml: `
-      <div class="pic-big">${emoji}</div>
-      <div class="word-masked">${'_' + word.slice(1)}</div>
-      <div class="q-expr">開頭是哪一個小寫字母？</div>`,
-    options: optionsOf(letter.toLowerCase()),
-    say: hasVoice ? word : null,
-  };
-}
-
-/* ================= 出題 ================= */
 
 function makeQuestion(index) {
-  if (randomMode) {
-    const fn = pick([q1Case, q1Case, q1Sequence, q2Guess, q2Lower]);
-    return fn === q1Case ? fn(rnd(2) === 0) : fn();
+  const item = pick(WORDS);
+  if (index % 3 === 0) {
+    return {
+      skill: 'pictureToWord',
+      promptHtml: `<div class="pic-big">${item.emoji}</div><div class="q-expr">哪一個是「${item.zh}」？</div>`,
+      options: choices(item, option => option.word),
+      sayZh: `哪一個是${item.zh}`,
+    };
   }
-
-  if (state.level === 1) {
-    // 前幾題固定考容易混淆的那幾組
-    if (index < CONFUSING_QUOTA) return q1Case(true);
-    return pick([q1Case, q1Case, q1Sequence])(false);
+  if (index % 3 === 1) {
+    return {
+      skill: 'wordToPicture',
+      promptHtml: `${hasVoice ? `<button class="word-say" data-say="${item.word}" type="button" aria-label="再聽一次 ${item.word}">🔊</button>` : ''}<div class="word-full">${item.word}</div><div class="q-expr">選出正確的圖片</div>`,
+      options: choices(item, option => `${option.emoji} ${option.zh}`),
+      say: hasVoice ? item.word : null,
+      sayZh: '選出正確的圖片',
+    };
   }
-
-  return index % 2 === 0 ? q2Guess() : q2Lower();
+  const otherLetters = shuffle(WORDS.filter(option => option.letter !== item.letter)).slice(0, 2);
+  return {
+    skill: 'firstLetter',
+    promptHtml: `<div class="pic-big">${item.emoji}</div>${hasVoice ? `<button class="word-say" data-say="${item.word}" type="button" aria-label="再聽一次 ${item.word}">🔊</button>` : ''}<div class="word-masked">_${item.word.slice(1)}</div><div class="q-expr">少了哪一個開頭字母？</div>`,
+    options: shuffle([item, ...otherLetters]).map(option => ({ text: option.letter, correct: option.letter === item.letter })),
+    say: hasVoice ? item.word : null,
+    sayZh: '少了哪一個開頭字母',
+  };
 }
 
-/* ================= 畫面 ================= */
-
-function renderHead() {
-  const note = randomMode
-    ? '什麼題型都會出現，輕鬆玩！'
-    : state.level === 1
-      ? `再連續 ${Math.max(0, 2 - state.streak)} 輪全對就解鎖新玩法`
-      : '看圖片，選出開頭的字母';
-
-  el.head.innerHTML = `
-    <span class="level-chip${randomMode ? ' random' : ''}">${randomMode ? '🎲 隨機模式' : LEVEL_NAME[state.level]}</span>
-    <span class="eng-note">${note}</span>
-    <button class="kid-btn plain mode-btn" id="btnMode" type="button">
-      ${randomMode ? '← 回到關卡' : '🎲 隨機模式'}
-    </button>
-  `;
-  el.head.querySelector('#btnMode').addEventListener('click', () => {
-    randomMode = !randomMode;
-    quiz?.pause();
-    startRound();          // 兩種模式的題目畫面不一樣，要重建
-  });
+function renderHome() {
+  quiz?.pause();
+  root.innerHTML = `
+    <section class="english-adventure">
+      <div class="picnic-intro">
+        <div><p class="adventure-kicker">企鵝的野餐任務</p><h2>先認識食物，再幫企鵝裝進野餐籃</h2><p>點每張字卡聽一遍。準備好後，完成 6 個小挑戰。</p></div>
+        <div class="picnic-scene" aria-hidden="true">🐧🧺</div>
+      </div>
+      <div class="word-shelf" aria-label="野餐英文單字">
+        ${WORDS.map(item => `<button class="word-card" data-word="${item.word}" type="button"><span class="word-card-pic">${item.emoji}</span><span class="word-card-en">${item.letter.toLowerCase()} · ${item.word}</span><span class="word-card-zh">${item.zh}${hasVoice ? '　🔊' : ''}</span></button>`).join('')}
+      </div>
+      <div class="picnic-actions">
+        <button class="kid-btn mint start-picnic" type="button">開始野餐挑戰 →</button>
+        <div class="picnic-sticker ${state.sticker ? 'unlocked' : ''}"><span>${state.sticker ? '🧺' : '？'}</span><div><strong>${state.sticker ? '野餐籃貼紙' : '神祕貼紙'}</strong><small>${state.sticker ? `已完成 ${state.rounds} 次挑戰` : '完成一次挑戰就能解鎖'}</small></div></div>
+      </div>
+    </section>`;
+  root.querySelectorAll('.word-card').forEach(button => button.addEventListener('click', () => speak(button.dataset.word)));
+  root.querySelector('.start-picnic').addEventListener('click', startChallenge);
+  speech.zh('先點字卡聽一聽，準備好就開始野餐挑戰');
 }
 
-function startRound() {
-  renderHead();
-
-  const common = {
+function startChallenge() {
+  root.innerHTML = `<div class="eng-head"><span class="level-chip">🧺 野餐挑戰</span><span class="eng-note">圖片、單字和開頭字母都會出現</span><button class="kid-btn plain mode-btn" type="button">← 回到字卡</button></div><div class="english-quiz"></div>`;
+  root.querySelector('.mode-btn').addEventListener('click', renderHome);
+  quiz = createQuizView(root.querySelector('.english-quiz'), {
+    roundSize: ROUND,
     makeQuestion,
     buddy: '🐧',
-    onSpeak: t => speech.say(t, 'en'),
-  };
-
-  quiz = randomMode
-    // 隨機模式：一直出題不結算，想停再按「結束」
-    ? createQuizView(el.quiz, {
-        ...common,
-        endless: true,
-        onQuit: () => { randomMode = false; quiz?.pause(); startRound(); },
-        onMilestone: () => stars.add('english', 1),   // 每答對 5 題一顆星
-      })
-    : createQuizView(el.quiz, {
-        ...common,
-        roundSize: ROUND,
-        onDone: () => { renderHead(); quiz.start(); },
-        onFinish({ correct, total }) {
-          if (state.level === 1) {
-            state.streak = correct === total ? state.streak + 1 : 0;
-            if (state.streak >= 2) { state.level = 2; state.streak = 0; }
-            saveState();
-          }
-          const gained = correct === total ? 2 : 1;
-          stars.add('english', gained);
-          return gained;
-        },
-      });
+    onSpeak: speak,
+    doneLabel: '看看我的貼紙',
+    onResult({ question, firstTry }) {
+      const skill = state.skills[question.skill];
+      if (!skill) return;
+      skill.tried++;
+      if (firstTry) skill.firstTry++;
+      saveState();
+    },
+    onFinish({ correct, total }) {
+      state.rounds++;
+      state.sticker = true;
+      saveState();
+      const gained = correct === total ? 2 : 1;
+      stars.add('english', gained);
+      return gained;
+    },
+    onDone: renderHome,
+  });
   quiz.start();
 }
 
-/* ================= 模組介面 ================= */
-
 export default {
-  id: 'english',
-  title: '英文練習',
-  icon: '🔤',
-
+  id: 'english', title: '英文練習', icon: '🔤',
   mount(container) {
     if (built) return;
-    loadState();
-    container.innerHTML = `
-      <div class="eng-head" id="engHead"></div>
-      <div id="engQuiz"><p class="side-note">正在準備發音…</p></div>
-    `;
-    el = {
-      head: container.querySelector('#engHead'),
-      quiz: container.querySelector('#engQuiz'),
-    };
     built = true;
-
-    speech.prepare().then(ok => {
-      hasVoice = ok.en;
-      startRound();
-      speech.zh('這裡是英文練習，看圖片選出開頭的字母');
-    });
+    root = container;
+    loadState();
+    speech.prepare().then(available => { hasVoice = available.en; renderHome(); });
   },
-
-  unmount() {
-    quiz?.pause();
-    speech.stop();
-  },
+  unmount() { quiz?.pause(); speech.stop(); },
 };
